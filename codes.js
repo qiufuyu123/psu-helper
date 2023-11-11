@@ -94,7 +94,7 @@ f[2,2] <- 'b'\n\
 output a\n\
 output b\n\
 output c\n\
-output d & \"(true)\"\n\
+output d\n\
 output e[1]\n\
 output f[2,2]\n\
 output X\n\
