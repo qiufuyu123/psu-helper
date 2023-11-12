@@ -15,7 +15,7 @@ function iscalc(c){
 
 function iskwd(s){
     return ['procedure','endprocedure','if','then','else','endif','while','do','endwhile','for','step','endfor'
-            ,'declare','input','output','constant','case','repeat','until','function','endfunction','call','return','returns'].includes(s);
+            ,'declare','input','output','constant','case','repeat','until','function','endfunction','call','returns'].includes(s);
 }
 
 function gentoken(t,v,c){
@@ -250,8 +250,8 @@ function fdecl(proced = false){
     var params = new Map();
     if(!peek(')')){
         params = getValsTable(true);
-        eat(')')
     }
+    eat(')')
     if(peek('returns')){
         if(proced){
             throw 'PROCEDURE不能有返回值，请考虑function';
@@ -809,6 +809,7 @@ function execute(tokens,lg,conti = false,eout = true){
     if(!conti){
         cleangvm(tokens);
         gvm.output = lg;
+        gvm.vars.set('stdlib',{type:'string',val:codes_stdlib});
     }
     while(gvm.tkidx < gvm.tokens.length && !gvm.stop){
         if(gvm.inputting)
