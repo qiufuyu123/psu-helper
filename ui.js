@@ -29,10 +29,10 @@ function add_log(str,clean=false){
 function input_handle(){
   var codes = document.getElementById('codeinput').value;
   if(gvm.inputting){
-    gvm.vars.set(gvm.inputname,{type:'str',val:codes});
+    gvm.vars.set(gvm.inputname,{type:'string',val:codes});
     gvm.inputting=false;
     document.getElementById('runbtn').setAttribute('class','layui-icon layui-icon-triangle-r layui-btn layui-bg-cyan');
-    execute(undefined,undefined,true);
+    execute(undefined,add_log,true);
   }
 }
 
