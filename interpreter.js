@@ -15,7 +15,7 @@ function iscalc(c){
 
 function iskwd(s){
     return ['procedure','endprocedure','if','then','else','endif','while','do','endwhile','for','step','endfor'
-            ,'declare','input','output','constant','case','repeat','until','function','endfunction','call','returns'].includes(s);
+            ,'declare','input','output','constant','case','repeat','until','function','endfunction','call','returns','return'].includes(s);
 }
 
 function gentoken(t,v,c){
