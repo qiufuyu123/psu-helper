@@ -133,7 +133,8 @@ function match(type){
 }
 
 function eat(val){
-    return next().val === val;
+    if(next().val !== val)
+        throw '缺少 `'+val+'`';
 }
 
 function tobool(v){
@@ -153,9 +154,7 @@ parser_table.set('constant',function(){
         throw '在constant后需要变量的名称!';
     }
     const name = next().val;
-    if(!eat('=')){
-        throw '缺少 `=`';
-    }
+    eat('=');
     const v = expr(3);
     gvm.vars.set(name,{type:v.type,val:v.val});
 });
@@ -177,27 +176,21 @@ function getValsTable(split = false){
             throw '在declare后需要变量的名称!';
         }
         const id = next().val;
-        if(!eat(':')){
-            throw '缺少 `:` 来指定类型';
-        }
+        eat(':')
         if(!match('wd')){
             throw '在 `:` 后缺少类型名称';
         }
         var type = cvt_type(next().val);
         if(type === 'array'){
             // array
-            if(!eat('[')){
-                throw '在定义数组过程中，缺少 `[`';
-            }
+            eat('[');
             var dimensions = [];
             while(true){
                 if(!match('number')){
                     throw '缺少数组长度!';
                 }
                 const left = next().val;
-                if(!eat(':')){
-                    throw '需要 `:` ';
-                }
+                eat(':')
                 if(!match('number')){
                     throw '缺少数组边界(必须为常数，不接受变量或常量）!';
                 }
@@ -208,12 +201,8 @@ function getValsTable(split = false){
                 }
                 next();
             }
-            if(!eat(']')){
-                throw '缺少 `]` !';
-            }
-            if(!eat('of')){
-                throw '缺少 of 来确定数组类型!';
-            }
+            eat(']')
+            eat('of');
             if(!match('wd')){
                 throw '缺少数组的类型名!';
             }
@@ -257,15 +246,11 @@ function fdecl(proced = false){
         throw '缺少要调用的函数名!';
     }
     const name = next().val;
-    if(!eat('(')){
-        throw '函数名后缺少`(`!';
-    }
+    eat('(')
     var params = new Map();
     if(!peek(')')){
         params = getValsTable(true);
-        if(!eat(')')){
-            throw '参数后缺少`)`';
-        }
+        eat(')')
     }
     if(peek('returns')){
         if(proced){
@@ -298,9 +283,7 @@ parser_table.set('procedure',function(){
 });
 
 parser_table.set('case',function(){
-    if(!eat('of')){
-        throw 'case 后 需要 of!';
-    }
+    eat('of');
     const v = expr(3);
     var tmp = {type:'bool',val:false};
     var s = 0;
@@ -442,9 +425,7 @@ parser_table.set('for',function(){
 
 parser_table.set('if',function(){
     const v = expr(3);
-    if(!eat('then')){
-        throw '缺少THEN';
-    }
+    eat('then')
     var s = tobool(v);
     while(gvm.tkidx < gvm.tokens.length && !gvm.stop){
         if(peek('endif')){
@@ -537,22 +518,21 @@ function cmptype(v1,v2){
     return v1.type === v2.type;
 }
 
+function fakeparm(){
+    eat('(');
+    const v = expr(3);
+    eat(')');
+    return v;
+}
+
 function fakecall(){
-    if(!eat('(')){
-        throw '函数调用需要 "(" 符号';
-    }
-    if(!eat(')')){
-        throw '函数调用需要 ")" 符号';
-    }
+   eat('(');
+   eat(')')
 }
 
 function expr(prio=3,assign = false){
     var sig = 0;
     const t = next();
-    if(t.val === ')'){
-        gvm.tkidx--;
-        return nil_val;
-    }
     var leftv = nil_val;
     if(t.val === 'not'){
         leftv = expr(3);
@@ -566,25 +546,26 @@ function expr(prio=3,assign = false){
             throw '无法将类型 `'+leftv.type+'` 转为 integer!';
         }
     }else if(t.val === '('){
+        if(peek(')')){
+            return nil_val;
+        }
         leftv = expr(3);
         
-        if(!eat(')')){
-            throw '缺少 `)` !';
-        }
+        eat(')')
     }else if(t.val === 'asc'){
-        const v = expr(3);
+        const v = fakeparm();
         if(v.type !== 'string'){
             throw 'ASC函数必须作用于char类型上!';
         }
         leftv = {type:'integer',val:v.val.charCodeAt(0)};
     }else if(t.val === 'chr'){
-        const v = expr(3);
+        const v = fakeparm();
         if(v.type !== 'integer'){
             throw 'CHR函数必须作用于integer类型上!';
         }
         leftv = {type:'string',val:String.fromCharCode(v.val)};
     }else if(t.val === 'tonum'){
-        const v = expr(3);
+        const v = fakeparm();
         if(v.type !== 'string'){
             throw 'TONUM函数必须作用于string类型上!';
         }
@@ -594,7 +575,7 @@ function expr(prio=3,assign = false){
         leftv = {type:'real',val:Math.random()};
     }
     else if(t.val === 'int'){
-        const v = expr(3);
+        const v = fakeparm();
         if(v.type !== 'real'){
             throw 'int函数必须作用于string类型上!';
         }
@@ -610,9 +591,7 @@ function expr(prio=3,assign = false){
             if(c.type === 'string'){
                 next();
                 const idx = expr(3);
-                if(!eat(']')){
-                    throw '缺少 ] !';
-                }
+                eat(']');
                 if(idx.val < 0 || idx.val >= cp.length){
                     leftv = {type:'string',val:'undefined'};
                 }else{
@@ -637,9 +616,7 @@ function expr(prio=3,assign = false){
                     }
                     next();
                 }
-                if(!eat(']')){
-                    throw '缺少 `]` !';
-                }
+                eat(']');
                 console.log(dimensions.length+","+cp.val.length);
                 //维度检查
                 if(dimensions.length !== cp.val.length){
@@ -678,9 +655,7 @@ function expr(prio=3,assign = false){
                 throw '调用参数数量不匹配';
             }
             console.log(closure);
-            if(!eat(')')){
-                throw '缺少`)` 可能是函数调用参数数量不匹配？';
-            }
+            eat(')','可能是参数不匹配？');
             // 加载闭包
             gvm.stacks.push({vars:old,pc:gvm.tkidx});
             gvm.vars = closure;
