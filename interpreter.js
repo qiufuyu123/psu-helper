@@ -155,7 +155,7 @@ parser_table.set('constant',function(){
     }
     const name = next().val;
     eat('=');
-    const v = expr(3);
+    const v = expr(4);
     gvm.vars.set(name,{type:v.type,val:v.val});
 });
 
@@ -284,7 +284,7 @@ parser_table.set('procedure',function(){
 
 parser_table.set('case',function(){
     eat('of');
-    const v = expr(3);
+    const v = expr(4);
     var tmp = {type:'bool',val:false};
     var s = 0;
     while(true){
@@ -302,7 +302,7 @@ parser_table.set('case',function(){
                 gvm.tkidx--;
             }
             next();
-            const r = expr(3);
+            const r = expr(4);
             if((cmptype(v,r) && v.val === r.val) || r.val === '__otherwise__'){
                 s=1;
             }else{
@@ -326,7 +326,7 @@ parser_table.set('repeat',function(){
         throw '循环次数超过500次，疑似死循环？程序已经终止（栈溢出保护）';
     }
     const idx = gvm.tkidx-1;
-    // const v = tobool(expr(3));
+    // const v = tobool(expr(4));
     // console.log(v);
     // if(v === false){
     //     while(next().val !== 'endwhile');
@@ -338,7 +338,7 @@ parser_table.set('repeat',function(){
         if(peek('until')){
             next();
             gvm.loopcnt++;
-            const v = tobool(expr(3));
+            const v = tobool(expr(4));
             if(v === false){
                 gvm.tkidx=idx;
                 return true;
@@ -359,7 +359,7 @@ parser_table.set('while',function(){
         throw '循环次数超过500次，疑似死循环？程序已经终止（栈溢出保护）';
     }
     const idx = gvm.tkidx-1;
-    const v = tobool(expr(3));
+    const v = tobool(expr(4));
     console.log(v);
     if(v === false){
         while(next().val !== 'endwhile');
@@ -390,14 +390,14 @@ parser_table.set('for',function(){
     expr(4);
     var i = gvm.vars.get(name);
     eat('to');
-    const end = expr(3);
+    const end = expr(4);
     if(!isnumeric(end)){
         throw 'TO 后面的值必须是一个number';
     }
     var step = 1;
     if(peek('step')){
         next();
-        const s = expr(3);
+        const s = expr(4);
         if(!isnumeric(s)){
             throw 'STEP 后面的值必须是一个number!';
         }
@@ -424,7 +424,7 @@ parser_table.set('for',function(){
 });
 
 parser_table.set('if',function(){
-    const v = expr(3);
+    const v = expr(4);
     eat('then')
     var s = tobool(v);
     while(gvm.tkidx < gvm.tokens.length && !gvm.stop){
@@ -455,7 +455,7 @@ function endf(){
 }
 
 parser_table.set('return',function(){
-    gvm.returnv = expr(3);
+    gvm.returnv = expr(4);
     endf();
 });
 
@@ -481,7 +481,7 @@ parser_table.set('input',function(){
 
 
 parser_table.set('output',function(){
-    gvm.output(expr(3).val);
+    gvm.output(expr(4).val);
 });
 
 const nil_val={
@@ -500,15 +500,15 @@ function isnumeric(t){
 // 0: AND OR
 function get_prio(c){
     if(c==='^')
-        return 3;
+        return 4;
     else if(c==='+'||c==='-'||c==='&')
-        return 2;
+        return 3;
     else if(c==='*'||c==='/'||c==='%')
-        return 1;
+        return 2;
     else if(c==='and' || c==='or')
-        return 0;
+        return 1;
     else if(['<','>','='].includes(c))
-        return -1;
+        return 0;
 }
 
 function cmptype(v1,v2){
@@ -520,7 +520,7 @@ function cmptype(v1,v2){
 
 function fakeparm(){
     eat('(');
-    const v = expr(3);
+    const v = expr(4);
     eat(')');
     return v;
 }
@@ -535,11 +535,11 @@ function expr(prio=3,assign = false){
     const t = next();
     var leftv = nil_val;
     if(t.val === 'not'){
-        leftv = expr(3);
+        leftv = expr(4);
         leftv = {type:'bool',val:!tobool(leftv)};
     }
     else if(t.val === '-' || t.val === '+'){
-        leftv = expr(prio);
+        leftv = expr(-1);
         if(leftv.type === 'integer' || leftv.type === 'real'){
             leftv.val = t.val==='-'? -leftv.val:leftv.val;
         }else{
@@ -549,7 +549,7 @@ function expr(prio=3,assign = false){
         if(peek(')')){
             return nil_val;
         }
-        leftv = expr(3);
+        leftv = expr(4);
         
         eat(')')
     }else if(t.val === 'asc'){
@@ -590,7 +590,7 @@ function expr(prio=3,assign = false){
         if(peek('[')){
             if(c.type === 'string'){
                 next();
-                const idx = expr(3);
+                const idx = expr(4);
                 eat(']');
                 if(idx.val < 0 || idx.val >= cp.length){
                     leftv = {type:'string',val:'undefined'};
@@ -606,7 +606,7 @@ function expr(prio=3,assign = false){
                 next();
                 var dimensions = [];
                 while(true){
-                    const tmp = expr(3);
+                    const tmp = expr(4);
                     if(!isnumeric(tmp)){
                         throw '数组索引必须是整数！';
                     }
@@ -643,7 +643,7 @@ function expr(prio=3,assign = false){
             var cnt = 0;
             closure = structuredClone(old);
             for(let key of parms.keys()){
-                const v = expr(3);
+                const v = expr(4);
                 closure.set(key,v);
                 cnt++;
                 if(!peek(',')){
@@ -671,8 +671,7 @@ function expr(prio=3,assign = false){
                 }
                 console.log(e);
             }
-        }
-        else{
+        }else{
             leftv = {type:c.type,val:c.val};
         }
     }
@@ -711,7 +710,7 @@ function expr(prio=3,assign = false){
             if(op.val === '<'){
                 if(peek('=')){
                     next();
-                    const rightv = expr(3);
+                    const rightv = expr(4);
                     if(isnumeric(leftv) && isnumeric(rightv)){
                         return {type:'bool',val:leftv.val <= rightv.val};
                     }else{
@@ -719,10 +718,10 @@ function expr(prio=3,assign = false){
                     }
                 }else if(peek('>')){
                     next();
-                    const rightv = expr(3);
+                    const rightv = expr(4);
                     return {type:'bool',val:leftv.val !== rightv.val};
                 }
-                const rightv = expr(3);
+                const rightv = expr(4);
                 if(isnumeric(leftv) && isnumeric(rightv)){
                     return {type:'bool',val:leftv.val < rightv.val};
                 }else{
@@ -731,35 +730,35 @@ function expr(prio=3,assign = false){
             }else if(op.val === '>'){
                 if(peek('=')){
                     next();
-                    const rightv = expr(3);
+                    const rightv = expr(4);
                     if(isnumeric(leftv) && isnumeric(rightv)){
                         return {type:'bool',val:leftv.val >= rightv.val};
                     }else{
                         throw '比较运算必须在 两个 数值之间';
                     }
                 }
-                const rightv = expr(3);
+                const rightv = expr(4);
                 if(isnumeric(leftv) && isnumeric(rightv)){
                     return {type:'bool',val:leftv.val > rightv.val};
                 }else{
                     throw '比较运算必须在 两个 数值之间';
                 }
             }else if(op.val === 'or'){
-                const rightv = expr(3);
+                const rightv = expr(4);
                 return {type:'bool',val:tobool(leftv) || tobool(rightv)}
             }else if(op.val === 'and'){
-                const rightv = expr(3);
+                const rightv = expr(4);
                 return {type:'bool',val:tobool(leftv) && tobool(rightv)}
             }
             
 
             if(op.val==='='){
-                const rightv = expr(3);
+                const rightv = expr(4);
                 // compare
                 return {type:'bool',val:leftv.val === rightv.val};
                 // === 表示既判断类型又判断数值
             }
-            const rightv = expr(prio-1);
+            const rightv = expr(p-1);
             if(isnumeric(leftv) && isnumeric(rightv)){
                 if(opc === '+' || opc === '-'){
                     leftv.val = opc === '+'? leftv.val+rightv.val:leftv.val-rightv.val;
