@@ -572,19 +572,19 @@ function expr(prio=3,assign = false){
             throw '缺少 `)` !';
         }
     }else if(t.val === 'asc'){
-        const v = expr(0);
+        const v = expr(3);
         if(v.type !== 'string'){
             throw 'ASC函数必须作用于char类型上!';
         }
         leftv = {type:'integer',val:v.val.charCodeAt(0)};
     }else if(t.val === 'chr'){
-        const v = expr(0);
+        const v = expr(3);
         if(v.type !== 'integer'){
             throw 'CHR函数必须作用于integer类型上!';
         }
         leftv = {type:'string',val:String.fromCharCode(v.val)};
     }else if(t.val === 'tonum'){
-        const v = expr(0);
+        const v = expr(3);
         if(v.type !== 'string'){
             throw 'TONUM函数必须作用于string类型上!';
         }
@@ -594,7 +594,7 @@ function expr(prio=3,assign = false){
         leftv = {type:'real',val:Math.random()};
     }
     else if(t.val === 'int'){
-        const v = expr(0);
+        const v = expr(3);
         if(v.type !== 'real'){
             throw 'int函数必须作用于string类型上!';
         }
