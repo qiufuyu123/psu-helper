@@ -13,9 +13,11 @@ function iscalc(c){
     return ['+','-','*','/','=','&','<','>','%','^'].includes(c);
 }
 
+var keywords_list = ['procedure','endprocedure','if','then','else','endif','while','do','endwhile','for','step','endfor'
+,'declare','input','output','constant','case','endcase','repeat','until','function','endfunction','call','returns','return'];
+
 function iskwd(s){
-    return ['procedure','endprocedure','if','then','else','endif','while','do','endwhile','for','step','endfor'
-            ,'declare','input','output','constant','case','repeat','until','function','endfunction','call','returns','return'].includes(s);
+    return keywords_list.includes(s);
 }
 
 function gentoken(t,v,c){

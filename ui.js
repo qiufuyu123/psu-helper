@@ -7,6 +7,50 @@ if(__build__!==1){
     const codes = require('./codes.js');
 }
 
+function getKwdHighlight(){
+  let ret = [];
+  for(let i in keywords_list){
+    ret.push([keywords_list[i].toUpperCase(),'kwd-style']);
+    ret.push([keywords_list[i].toLowerCase(),'kwd-style']);
+  }
+  ret.push(['<-','asn-style']);
+  console.log(ret);
+  return ret;
+}
+
+CodeMirror.defineMode('cert', () => ({
+  token: (stream, state) => {
+    const cmCustomCheckStreamFn = streamWrapper => {
+      // 自定义关键字和样式
+      const customKeyWords = getKwdHighlight();
+      for (let i = 0; i < customKeyWords.length; i++) {
+        if (streamWrapper.match(customKeyWords[i][0])) { 
+          console.log('match:'+customKeyWords[i][0]);
+          return customKeyWords[i][1];
+         }
+      }
+      return '';
+    };
+
+    const ret = cmCustomCheckStreamFn(stream);
+    if (ret.length > 0) return ret;
+
+    stream.next();
+    return null;
+  }
+}));
+CodeMirror.registerHelper("hintWords", "cert",keywords_list)
+var editor=CodeMirror.fromTextArea(document.getElementById("codeeditor"),{
+  mode:"cert",
+  lineNumbers: true,
+  lineWrapping:true,
+  foldGutter: true,
+  gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+  matchBrackets:true,
+  extraKeys: {"Ctrl-Space": "autocomplete"}
+});
+
+
 const parent_node = '    <li lay-options="{id: 101}">\
 <div class="layui-menu-body-title"><a href="javascript:;">menu item 1</a></div>\
 </li>'
@@ -38,7 +82,7 @@ function input_handle(){
 
 function code_run(){
   add_log('',true);
-  var codes = document.getElementById('codeeditor').value;
+  var codes =editor.getDoc().getValue();
   try{
     const a = tokenize(codes_stdlib+'\n'+codes+'\n',add_log);
     console.log(a);
@@ -72,7 +116,9 @@ layui.use(function(){
       const name = options.title;
       const codes = examples.get(name);
       if(codes !== undefined){
-        document.getElementById('codeeditor').value = codes;
+        editor.getDoc().setValue(codes);
+        editor.refresh();
+        //document.getElementById('codeeditor').value = codes;
       }
     });
   });
